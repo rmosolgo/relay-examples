@@ -34,7 +34,7 @@ async function fetchQuery(
   params: RequestParameters,
   variables: Variables,
 ): Promise<GraphQLResponse> {
-  const response = await fetch('/graphql', {
+  const response = await fetch('http://localhost:3004/graphql', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
