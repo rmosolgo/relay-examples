@@ -17,14 +17,23 @@ ME = {
 }
 
 class TodoSchema < GraphQL::Schema
+  class CustomId < GraphQL::Types::ID
+    graphql_name "CustomId"
+  end
+
+  module Node
+    include GraphQL::Schema::Interface
+    field :id, CustomId, null: false
+  end
+
   class Todo < GraphQL::Schema::Object
-    implements GraphQL::Types::Relay::Node
+    implements Node
     field :text, String, null: false
     field :complete, Boolean, null: false
   end
 
   class User < GraphQL::Schema::Object
-    implements GraphQL::Types::Relay::Node
+    implements Node
     field :user_id, String, null: false
     field :todos, Todo.connection_type do
       argument :status, String, default_value: "any"
@@ -43,7 +52,14 @@ class TodoSchema < GraphQL::Schema
   end
 
   class Query < GraphQL::Schema::Object
-    include GraphQL::Types::Relay::HasNodeField
+    field :node, Node do
+      argument :id, CustomId
+    end
+
+    def node(id:)
+      # Not actually used
+    end
+
     field :user, User do
       argument :id, String, required: false
     end
@@ -55,7 +71,7 @@ class TodoSchema < GraphQL::Schema
 
   class AddTodo < GraphQL::Schema::RelayClassicMutation
     argument :text, String
-    argument :user_id, ID
+    argument :user_id, CustomId
     argument :client_mutation_id, String, required: false
 
     field :todo_edge, Todo.edge_type, null: false
@@ -88,8 +104,8 @@ class TodoSchema < GraphQL::Schema
 
   class ChangeTodoStatus < GraphQL::Schema::RelayClassicMutation
     argument :complete, Boolean
-    argument :id, ID
-    argument :user_id, ID
+    argument :id, CustomId
+    argument :user_id, CustomId
     argument :client_mutation_id, String, required: false
 
     field :todo, Todo, null: false
@@ -110,7 +126,7 @@ class TodoSchema < GraphQL::Schema
 
   class MarkAllTodos < GraphQL::Schema::RelayClassicMutation
     argument :complete, Boolean
-    argument :user_id, ID
+    argument :user_id, CustomId
     argument :client_mutation_id, String, required: false
 
     field :changed_todos, [Todo], null: false
@@ -130,7 +146,7 @@ class TodoSchema < GraphQL::Schema
   end
 
   class RemoveCompletedTodos < GraphQL::Schema::RelayClassicMutation
-    argument :user_id, ID
+    argument :user_id, CustomId
     argument :client_mutation_id, String, required: false
 
     field :deleted_todo_ids, [String], null: true
@@ -150,11 +166,11 @@ class TodoSchema < GraphQL::Schema
   end
 
   class RemoveTodo < GraphQL::Schema::RelayClassicMutation
-    argument :id, ID
-    argument :user_id, ID
+    argument :id, CustomId
+    argument :user_id, CustomId
     argument :client_mutation_id, String, required: false
 
-    field :deleted_todo_id, ID, null: false
+    field :deleted_todo_id, CustomId, null: false
     field :user, User, null: false
     field :client_mutation_id, String
 
@@ -173,7 +189,7 @@ class TodoSchema < GraphQL::Schema
 
   class RenameTodo < GraphQL::Schema::RelayClassicMutation
     argument :text, String
-    argument :id, ID
+    argument :id, CustomId
     argument :client_mutation_id, String, required: false
 
     field :todo, Todo, null: false
@@ -201,11 +217,10 @@ class TodoSchema < GraphQL::Schema
 
   query(Query)
   mutation(Mutation)
-
-  def self.id_from_object(obj, type, ctx)
-    obj[:id]
-  end
 end
+
+
+File.write("data/schema.graphql", TodoSchema.to_definition)
 
 require "logger"
 

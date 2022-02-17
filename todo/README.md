@@ -1,3 +1,9 @@
+# GraphQL-Ruby Relay example
+
+This example has been modified to use a Ruby server (see `server.rb`). Additionally, the server uses a custom ID type.
+
+-----
+
 # Relay TodoMVC
 
 ## Installation
